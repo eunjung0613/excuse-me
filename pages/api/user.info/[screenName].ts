@@ -7,10 +7,10 @@ import checkSupportMethod from '@/controllers/error/check_supprot_methods';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
-  const supportMethod = ['POST'];
+  const supportMethod = ['GET'];
   try {
     checkSupportMethod(supportMethod, method);
-    await memberCtrl.add(req, res);
+    await memberCtrl.fundByScreenName(req, res);
   } catch (err) {
     console.error(err);
     //에러 처리
