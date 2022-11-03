@@ -1,4 +1,16 @@
-import { Avatar, Box, Button, Flex, FormControl, FormLabel, Switch, Text, Textarea, useToast } from '@chakra-ui/react';
+import {
+  Avatar,
+  Box,
+  Button,
+  Flex,
+  FormControl,
+  FormLabel,
+  Switch,
+  Text,
+  Textarea,
+  useToast,
+  VStack,
+} from '@chakra-ui/react';
 import { GetServerSideProps, NextPage } from 'next';
 import ResizeTextarea from 'react-textarea-autosize';
 import { useState } from 'react';
@@ -6,6 +18,7 @@ import axios, { AxiosResponse } from 'axios';
 import { ServiceLayout } from '@/components/service_layout';
 import { useAuth } from '@/contexts/auth_user.context';
 import { InAuthUser } from '@/models/in_auth_user';
+import MessageItem from '@/components/message_item';
 
 interface Props {
   userInfo: InAuthUser | null;
@@ -157,6 +170,32 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
             </FormLabel>
           </FormControl>
         </Box>
+        <VStack spacing="12px" mt="6">
+          <MessageItem
+            uid="anonymouse"
+            photoURL={authUser?.photoURL ?? ''}
+            displayName="test"
+            isOwner={false}
+            item={{
+              id: 'anonymouse',
+              message: 'test_1234',
+              createAt: '2022-03-02T20:15:55+09:00',
+              reply: 'reply',
+              replyAt: '2022-05-02T20:15:55+09:00',
+            }}
+          />
+          <MessageItem
+            uid="anonymouse"
+            photoURL={authUser?.photoURL ?? ''}
+            displayName="test"
+            isOwner={true}
+            item={{
+              id: 'anonymouse',
+              message: 'test_1234',
+              createAt: '2022-04-02T20:15:55+09:00',
+            }}
+          />
+        </VStack>
       </Box>
     </ServiceLayout>
   );
