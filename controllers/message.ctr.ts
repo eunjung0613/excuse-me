@@ -1,5 +1,5 @@
-import MessageModel from '@/models/message/message.model';
 import { NextApiRequest, NextApiResponse } from 'next';
+import MessageModel from '@/models/message/message.model';
 import BadReqError from './error/bad_request_error';
 
 async function post(req: NextApiRequest, res: NextApiResponse) {
@@ -14,8 +14,19 @@ async function post(req: NextApiRequest, res: NextApiResponse) {
   return res.status(201).end();
 }
 
+async function list(req: NextApiRequest, res: NextApiResponse) {
+  const { uid } = req.query;
+  if (uid === undefined) {
+    throw new BadReqError('uid 누락');
+  }
+  const uidToStr = Array.isArray(uid) ? uid[0] : uid;
+  const listResp = await MessageModel.list({ uid: uidToStr });
+  return res.status(201).json(listResp);
+}
+
 const messageCtrl = {
   post,
+  list,
 };
 
 export default messageCtrl;
