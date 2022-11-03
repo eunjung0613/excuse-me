@@ -10,6 +10,47 @@ import { InAuthUser } from '@/models/in_auth_user';
 interface Props {
   userInfo: InAuthUser | null;
 }
+async function postMessage({
+  uid,
+  message,
+  author,
+}: {
+  uid: string;
+  message: string;
+  author?: {
+    displayName: string;
+    photoURL?: string;
+  }; // 익명인지 아닌지 판단
+}) {
+  if (message.length < 0) {
+    return {
+      result: false,
+      message: '메시지를 입력해주세요',
+    };
+  }
+  try {
+    await fetch('/api/messages.add', {
+      method: 'post',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        uid,
+        message,
+        author,
+      }),
+    });
+    return {
+      result: true,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      result: false,
+      message: '저장실패',
+    };
+  }
+}
 
 const userHomePage: NextPage<Props> = function ({ userInfo }) {
   const [message, setMessage] = useState('');
@@ -67,6 +108,30 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
               colorScheme="yellow"
               variant="solid"
               size="sm"
+              onClick={async () => {
+                const postData: {
+                  message: string;
+                  uid: string;
+                  author?: {
+                    displayName: string;
+                    photoURL?: string;
+                  };
+                } = {
+                  message,
+                  uid: userInfo.uid,
+                };
+                if (isAnonymous === false) {
+                  postData.author = {
+                    photoURL: authUser?.photoURL ?? 'https://bit.ly/broken-link',
+                    displayName: authUser?.displayName ?? 'ananymous',
+                  };
+                }
+                const messageResp = await postMessage(postData);
+                if (messageResp.result === false) {
+                  toast({ title: '메세지 등록 실패', position: 'top-right' });
+                }
+                setMessage('');
+              }}
               disabled={message.length === 0}
             >
               등록
