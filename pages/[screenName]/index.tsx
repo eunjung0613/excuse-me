@@ -96,7 +96,7 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
       <Box maxW="md" mx="auto" pt="6">
         <Box borderWidth="1px" borderRadius="lg" overflow="hidden" mb="2" bg="white">
           <Flex p="6">
-            <Avatar size="lg" src={userInfo.photoURL ?? 'https://bit.ly/broken-link'} mr="2" />
+            <Avatar size="lg" src={userInfo.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'} mr="2" />
             <Flex direction="column" justify="center">
               <Text fontSize="md">{userInfo.displayName}</Text>
               <Text fontSize="xs">{userInfo.email}</Text>
@@ -107,7 +107,11 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
           <Flex align="center">
             <Avatar
               size="xs"
-              src={isAnonymous ? 'https://bit.ly/broken-link' : authUser?.photoURL ?? 'https://bit.ly/broken-link'}
+              src={
+                isAnonymous
+                  ? 'https://i.ibb.co/px4zSdP/pngwing-com.png'
+                  : authUser?.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'
+              }
               mr="2"
             />
             <Textarea
@@ -153,7 +157,7 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
                 };
                 if (isAnonymous === false) {
                   postData.author = {
-                    photoURL: authUser?.photoURL ?? 'https://bit.ly/broken-link',
+                    photoURL: authUser?.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png',
                     displayName: authUser?.displayName ?? 'ananymous',
                   };
                 }
@@ -195,7 +199,7 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
               item={messageData}
               uid={userInfo.uid}
               displayName={userInfo.displayName ?? ''}
-              photoURL={userInfo.photoURL ?? 'https://bit.ly/broken-link'}
+              photoURL={userInfo.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'}
               isOwner={isOwner}
             />
           ))}

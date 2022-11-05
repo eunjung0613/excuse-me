@@ -1,7 +1,7 @@
-import { InMessage } from '@/models/message/in_message';
-import convertDateToString from '@/utils/convert_date_to_string';
 import { Avatar, Box, Button, Divider, Flex, Text, Textarea } from '@chakra-ui/react';
 import ResizeTextarea from 'react-textarea-autosize';
+import { InMessage } from '@/models/message/in_message';
+import convertDateToString from '@/utils/convert_date_to_string';
 
 interface Props {
   uid: string;
@@ -18,7 +18,11 @@ const MessageItem = function ({ displayName, photoURL, isOwner, item }: Props) {
         <Flex pt="2" pl="2" alignItems="center">
           <Avatar
             size="xs"
-            src={item.author ? item.author.photoURL ?? 'https://bit.ly/broken-link' : 'https://bit.ly/broken-link'}
+            src={
+              item.author
+                ? item.author.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'
+                : 'https://i.ibb.co/px4zSdP/pngwing-com.png'
+            }
           />
           <Text fontSize="xx-small" ml="1">
             {item.author ? item.author.displayName : 'anonymous'}
