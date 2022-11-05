@@ -11,10 +11,12 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
+import { TriangleDownIcon } from '@chakra-ui/icons';
 import { GetServerSideProps, NextPage } from 'next';
 import ResizeTextarea from 'react-textarea-autosize';
 import { useEffect, useState } from 'react';
 import axios, { AxiosResponse } from 'axios';
+import { useQuery } from 'react-query';
 import { ServiceLayout } from '@/components/service_layout';
 import { useAuth } from '@/contexts/auth_user.context';
 import { InAuthUser } from '@/models/in_auth_user';
@@ -69,24 +71,58 @@ async function postMessage({
 const userHomePage: NextPage<Props> = function ({ userInfo }) {
   const [message, setMessage] = useState('');
   const [isAnonymous, setAnonymous] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [messageList, setMessageList] = useState<InMessage[]>([]);
   const toast = useToast();
   const { authUser } = useAuth();
-  async function fetchMessageList(uid: string) {
+  const [messageListFetchTrigger, setMessageListFetchTrigger] = useState(false);
+
+  async function fetchMessageInfo({ uid, messageId }: { uid: string; messageId: string }) {
     try {
-      const resp = await fetch(`/api/messages.list?uid=${uid}`);
+      const resp = await fetch(`/api/messages.info?uid=${uid}&messageId=${messageId}`);
       if (resp.status === 200) {
-        const data = await resp.json();
-        setMessageList(data);
+        const data: InMessage = await resp.json();
+        setMessageList((prev) => {
+          const findIndex = prev.findIndex((fv) => fv.id === data.id);
+          if (findIndex >= 0) {
+            const updateArr = [...prev];
+            updateArr[findIndex] = data;
+            return updateArr;
+          }
+          return prev;
+        });
       }
     } catch (err) {
       console.error(err);
     }
   }
-  useEffect(() => {
-    if (userInfo === null) return;
-    fetchMessageList(userInfo.uid);
-  }, [userInfo]);
+  const messageListQueryLey = ['messageList', userInfo?.uid, page, messageListFetchTrigger];
+  useQuery(
+    messageListQueryLey,
+    async () =>
+      // eslint-disable-next-line no-return-await
+      await axios.get<{
+        totalElements: number;
+        totalPages: number;
+        page: number;
+        size: number;
+        content: InMessage[];
+      }>(`/api/messages.list?uid=${userInfo?.uid}&page=${page}&size=10`),
+    {
+      keepPreviousData: true,
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        setTotalPages(data.data.totalPages);
+        if (page === 1) {
+          setMessageList([...data.data.content]);
+          return;
+        }
+        setMessageList((prev) => [...prev, ...data.data.content]);
+      },
+    },
+  );
+
   if (userInfo === null) {
     return <p>사용자를 찾을 수 없습니다.</p>;
   }
@@ -166,6 +202,10 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
                   toast({ title: '메세지 등록 실패', position: 'top-right' });
                 }
                 setMessage('');
+                setPage(1);
+                setTimeout(() => {
+                  setMessageListFetchTrigger((perv) => !perv);
+                }, 50);
               }}
               disabled={message.length === 0}
             >
@@ -195,15 +235,31 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
         <VStack spacing="12px" mt="6">
           {messageList.map((messageData) => (
             <MessageItem
-              key={`message-item-${userInfo.uid}-${messageData.id}`}
+              key={`message-Item-${userInfo.uid}-${messageData.id}`}
               item={messageData}
               uid={userInfo.uid}
-              displayName={userInfo.displayName ?? ''}
+              displayName={userInfo.displayName ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'}
               photoURL={userInfo.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'}
               isOwner={isOwner}
+              onSendComplete={() => {
+                fetchMessageInfo({ uid: userInfo.uid, messageId: messageData.id });
+              }}
             />
           ))}
         </VStack>
+        {totalPages > page && (
+          <Button
+            width="full"
+            mt="2"
+            fontSize="sm"
+            leftIcon={<TriangleDownIcon />}
+            onClick={() => {
+              setPage((p) => p + 1);
+            }}
+          >
+            더보기
+          </Button>
+        )}
       </Box>
     </ServiceLayout>
   );
