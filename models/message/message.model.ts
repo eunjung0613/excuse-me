@@ -1,4 +1,4 @@
-import { auth, firestore } from 'firebase-admin';
+import { firestore } from 'firebase-admin';
 import CustomServerError from '@/controllers/error/custom_server_error';
 import FirebaseAdmin from '../firebase_admin';
 import { InMessage, InMessageServer } from './in_message';
@@ -6,7 +6,6 @@ import { InAuthUser } from '../in_auth_user';
 
 const MEMBER_COL = 'members';
 const MSG_COL = 'messages';
-const SCR_NAME_COL = 'screen_names';
 
 const { Firestore } = FirebaseAdmin.getInstance();
 
@@ -76,7 +75,6 @@ async function updateMessage({ uid, messageId, deny }: { uid: string; messageId:
       createAt: messageData.createAt.toDate().toISOString(),
       replyAt: messageData.replyAt ? messageData.replyAt.toDate().toISOString() : undefined,
     };
-    return messageData;
   });
   return result;
 }
@@ -131,9 +129,11 @@ async function listWidthPage({ uid, page = 1, size = 10 }: { uid: string; page?:
     const messageColDoc = await transaction.get(messageCol);
     const data = messageColDoc.docs.map((mv) => {
       const docData = mv.data() as Omit<InMessageServer, 'id'>;
+      const isDeny = docData.deny !== undefined && docData.deny === true;
       const returnData = {
         ...docData,
         id: mv.id,
+        message: isDeny ? '비공개 처리된 메시지 입니다.' : docData.message,
         createAt: docData.createAt.toDate().toISOString(),
         replyAt: docData.replyAt ? docData.replyAt.toDate().toISOString() : undefined,
       } as InMessage;
@@ -164,8 +164,10 @@ async function get({ uid, messageId }: { uid: string; messageId: string }) {
       throw new CustomServerError({ statusCode: 400, message: '존재하지 않는 질문에 답변을 보내고 있어요 😫' });
     }
     const messageData = messageDoc.data() as InMessageServer;
+    const isDeny = messageData.deny !== undefined && messageData.deny === true;
     return {
       ...messageData,
+      message: isDeny ? '비공개 처리된 메시지 입니다.' : messageData.message,
       id: messageId,
       createAt: messageData.createAt.toDate().toISOString(),
       replyAt: messageData.replyAt ? messageData.replyAt.toDate().toISOString() : undefined,

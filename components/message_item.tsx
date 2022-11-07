@@ -12,24 +12,27 @@ import {
   Spacer,
   Text,
   Textarea,
+  useToast,
 } from '@chakra-ui/react';
 import ResizeTextarea from 'react-textarea-autosize';
 import { useState } from 'react';
 import { InMessage } from '@/models/message/in_message';
 import convertDateToString from '@/utils/convert_date_to_string';
 import MoreBtnIcon from './more_btn_icon';
+import FirebaseClient from '@/models/firebase_client';
 
 interface Props {
   uid: string;
   displayName: string;
+  screenName: string;
   photoURL: string;
   isOwner: boolean;
   item: InMessage;
   onSendComplete: () => void;
 }
-const MessageItem = function ({ uid, displayName, photoURL, isOwner, item, onSendComplete }: Props) {
+const MessageItem = function ({ uid, screenName, displayName, photoURL, isOwner, item, onSendComplete }: Props) {
   const [reply, setReply] = useState('');
-
+  const toast = useToast();
   async function postReply() {
     const resp = await fetch('/api/messages.add.reply', {
       method: 'POST',
@@ -45,7 +48,30 @@ const MessageItem = function ({ uid, displayName, photoURL, isOwner, item, onSen
     }
   }
 
+  async function updateMessage({ deny }: { deny: boolean }) {
+    const token = await FirebaseClient.getInstance().Auth.currentUser?.getIdToken();
+    if (token === undefined) {
+      toast({
+        title: '로그인한 사용자만 사용할 수 있는 메뉴입니다.',
+      });
+      return;
+    }
+    const resp = await fetch('/api/messages.deny', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', authorization: token },
+      body: JSON.stringify({
+        uid,
+        messageId: item.id,
+        deny,
+      }),
+    });
+    if (resp.status < 300) {
+      onSendComplete();
+    }
+  }
+
   const haveReply = item.reply !== undefined;
+  const isDeny = item.deny !== undefined ? item.deny === true : false;
   return (
     <Box borderRadius="md" width="full" bg="white" boxShadow="md">
       <Box>
@@ -77,7 +103,20 @@ const MessageItem = function ({ uid, displayName, photoURL, isOwner, item, onSen
                 size="xs"
               />
               <MenuList>
-                <MenuItem>비공개 처리</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    updateMessage({ deny: item.deny !== undefined ? !item.deny : true });
+                  }}
+                >
+                  {isDeny ? '비공개 처리 해제' : '비공개 처리'}
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    window.location.href = `/${screenName}/${item.id}`;
+                  }}
+                >
+                  메세지 상세 보기
+                </MenuItem>
               </MenuList>
             </Menu>
           )}

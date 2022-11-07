@@ -14,7 +14,7 @@ import {
 import { TriangleDownIcon } from '@chakra-ui/icons';
 import { GetServerSideProps, NextPage } from 'next';
 import ResizeTextarea from 'react-textarea-autosize';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { useQuery } from 'react-query';
 import { ServiceLayout } from '@/components/service_layout';
@@ -25,6 +25,7 @@ import { InMessage } from '@/models/message/in_message';
 
 interface Props {
   userInfo: InAuthUser | null;
+  screenName: string;
 }
 async function postMessage({
   uid,
@@ -68,7 +69,7 @@ async function postMessage({
   }
 }
 
-const userHomePage: NextPage<Props> = function ({ userInfo }) {
+const userHomePage: NextPage<Props> = function ({ userInfo, screenName }) {
   const [message, setMessage] = useState('');
   const [isAnonymous, setAnonymous] = useState(true);
   const [page, setPage] = useState(1);
@@ -238,6 +239,7 @@ const userHomePage: NextPage<Props> = function ({ userInfo }) {
               key={`message-Item-${userInfo.uid}-${messageData.id}`}
               item={messageData}
               uid={userInfo.uid}
+              screenName={screenName}
               displayName={userInfo.displayName ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'}
               photoURL={userInfo.photoURL ?? 'https://i.ibb.co/px4zSdP/pngwing-com.png'}
               isOwner={isOwner}
@@ -271,9 +273,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ query }) =
     return {
       props: {
         userInfo: null,
+        screenName: '',
       },
     };
   }
+  const screenNameToStr = Array.isArray(screenName) ? screenName[0] : screenName;
   try {
     const protocol = process.env.PROTOCOL || 'http';
     const host = process.env.HOST || 'localhost';
@@ -283,6 +287,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ query }) =
     return {
       props: {
         userInfo: userInfoResp.data ?? null,
+        screenName: screenNameToStr,
       },
     };
   } catch (err) {
@@ -290,6 +295,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ query }) =
     return {
       props: {
         userInfo: null,
+        screenName: '',
       },
     };
   }

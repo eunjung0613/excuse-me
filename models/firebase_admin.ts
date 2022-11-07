@@ -11,7 +11,7 @@ interface Config {
 export default class FirebaseAdmin {
   public static instance: FirebaseAdmin;
 
-  private static init = false;
+  private init = false;
 
   public static getInstance(): FirebaseAdmin {
     if (FirebaseAdmin.instance === undefined || FirebaseAdmin.instance === null) {
