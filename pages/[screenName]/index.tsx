@@ -39,7 +39,7 @@ async function postMessage({
     displayName: string;
     photoURL?: string;
   }; // 익명인지 아닌지 판단
-}) {
+}): Promise<{ result: true } | { result: false; message: string }> {
   if (message.length < 0) {
     return {
       result: false,
@@ -65,7 +65,7 @@ async function postMessage({
     console.error(err);
     return {
       result: false,
-      message: '저장실패',
+      message: '메세지 등록 실패',
     };
   }
 }

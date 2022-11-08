@@ -54,6 +54,30 @@ async function post({
   });
 }
 
+async function list({ uid }: { uid: string }) {
+  const memberRef = Firestore.collection(MEMBER_COL).doc(uid);
+  const listData = await Firestore.runTransaction(async (transaction) => {
+    const memberDoc = await transaction.get(memberRef);
+    if (memberDoc.exists === false) {
+      throw new CustomServerError({ statusCode: 400, message: '존재하지 않는 사용자.' });
+    }
+    const messageCol = memberRef.collection(MSG_COL).orderBy('createAt', 'desc');
+    const messageColDoc = await transaction.get(messageCol);
+    const data = messageColDoc.docs.map((mv) => {
+      const docData = mv.data() as Omit<InMessageServer, 'id'>;
+      const returnData = {
+        ...docData,
+        id: mv.id,
+        createAt: docData.createAt.toDate().toISOString(),
+        replyAt: docData.replyAt ? docData.replyAt.toDate().toISOString() : undefined,
+      } as InMessage;
+      return returnData;
+    });
+    return data;
+  });
+  return listData;
+}
+
 async function updateMessage({ uid, messageId, deny }: { uid: string; messageId: string; deny: boolean }) {
   const memberRef = Firestore.collection(MEMBER_COL).doc(uid);
   const messageRef = Firestore.collection(MEMBER_COL).doc(uid).collection(MSG_COL).doc(messageId);
@@ -77,30 +101,6 @@ async function updateMessage({ uid, messageId, deny }: { uid: string; messageId:
     };
   });
   return result;
-}
-
-async function list({ uid }: { uid: string }) {
-  const memberRef = Firestore.collection(MEMBER_COL).doc(uid);
-  const listData = await Firestore.runTransaction(async (transaction) => {
-    const memberDoc = await transaction.get(memberRef);
-    if (memberDoc.exists === false) {
-      throw new CustomServerError({ statusCode: 400, message: '메세지를 찾을 수 없습니다.' });
-    }
-    const messageCol = memberRef.collection(MSG_COL).orderBy('createAt', 'desc');
-    const messageColDoc = await transaction.get(messageCol);
-    const data = messageColDoc.docs.map((mv) => {
-      const docData = mv.data() as Omit<InMessageServer, 'id'>;
-      const returnData = {
-        ...docData,
-        id: mv.id,
-        createAt: docData.createAt.toDate().toISOString(),
-        replyAt: docData.replyAt ? docData.replyAt.toDate().toISOString() : undefined,
-      } as InMessage;
-      return returnData;
-    });
-    return data;
-  });
-  return listData;
 }
 
 async function listWidthPage({ uid, page = 1, size = 10 }: { uid: string; page?: number; size?: number }) {
