@@ -43,6 +43,7 @@ const MessagePage: NextPage<Props> = function ({ userInfo, messageData: initMsgD
   const isOwner = authUser !== null && authUser.uid === userInfo.uid;
   const metaImageUrl = `${baseUrl}/open-graph-img?text=${encodeURIComponent(messageData.message)}`;
   const thumbnailImgUrl = `${baseUrl}/api/thumbnail?url=${encodeURIComponent(metaImageUrl)}`;
+
   return (
     <>
       <Head>

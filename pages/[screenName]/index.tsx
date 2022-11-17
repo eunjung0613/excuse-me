@@ -99,6 +99,7 @@ const userHomePage: NextPage<Props> = function ({ userInfo, screenName }) {
       console.error(err);
     }
   }
+
   const messageListQueryLey = ['messageList', userInfo?.uid, page, messageListFetchTrigger];
   useQuery(
     messageListQueryLey,
@@ -270,14 +271,6 @@ const userHomePage: NextPage<Props> = function ({ userInfo, screenName }) {
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ query }) => {
   const { screenName } = query;
-  if (screenName === undefined) {
-    return {
-      props: {
-        userInfo: null,
-        screenName: '',
-      },
-    };
-  }
   const screenNameToStr = Array.isArray(screenName) ? screenName[0] : screenName;
   try {
     const protocol = process.env.PROTOCOL || 'http';

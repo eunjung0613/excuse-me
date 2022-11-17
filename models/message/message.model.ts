@@ -103,6 +103,22 @@ async function updateMessage({ uid, messageId, deny }: { uid: string; messageId:
   return result;
 }
 
+async function deleteMessage({ uid, messageId }: { uid: string; messageId: string }) {
+  const memberRef = Firestore.collection(MEMBER_COL).doc(uid);
+  const messageRef = Firestore.collection(MEMBER_COL).doc(uid).collection(MSG_COL).doc(messageId);
+  await Firestore.runTransaction(async (transaction) => {
+    const memberDoc = await transaction.get(memberRef);
+    const messageDoc = await transaction.get(messageRef);
+    if (memberDoc.exists === false) {
+      throw new CustomServerError({ statusCode: 400, message: '사용자를 찾을 수 없습니다.' });
+    }
+    if (messageDoc.exists === false) {
+      throw new CustomServerError({ statusCode: 400, message: '존재하지 않는 질문을 삭제할 수 없어요! 😫' });
+    }
+    await transaction.delete(messageRef);
+  });
+}
+
 async function listWidthPage({ uid, page = 1, size = 10 }: { uid: string; page?: number; size?: number }) {
   const memberRef = Firestore.collection(MEMBER_COL).doc(uid);
   const listData = await Firestore.runTransaction(async (transaction) => {
@@ -204,6 +220,7 @@ const MessageModel = {
   listWidthPage,
   get,
   postReply,
+  deleteMessage,
 };
 
 export default MessageModel;

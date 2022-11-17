@@ -29,8 +29,18 @@ interface Props {
   isOwner: boolean;
   item: InMessage;
   onSendComplete: () => void;
+  onDeleteComplete: () => void;
 }
-const MessageItem = function ({ uid, screenName, displayName, photoURL, isOwner, item, onSendComplete }: Props) {
+const MessageItem = function ({
+  uid,
+  screenName,
+  displayName,
+  photoURL,
+  isOwner,
+  item,
+  onSendComplete,
+  onDeleteComplete,
+}: Props) {
   const [reply, setReply] = useState('');
   const toast = useToast();
   async function postReply() {
@@ -70,8 +80,31 @@ const MessageItem = function ({ uid, screenName, displayName, photoURL, isOwner,
     }
   }
 
+  async function deleteMessage() {
+    const token = await FirebaseClient.getInstance().Auth.currentUser?.getIdToken();
+    if (token === undefined) {
+      toast({
+        title: '로그인한 사용자만 사용할 수 있는 메뉴입니다.',
+      });
+      return;
+    }
+    const resp = await fetch('/api/messages.delete', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json', authorization: token },
+      body: JSON.stringify({
+        uid,
+        messageId: item.id,
+      }),
+    });
+    if (resp.status < 300) {
+      /**메세지 삭제 후 목록 재로딩 */
+      window.location.href = `/${screenName}`;
+    }
+  }
+
   const haveReply = item.reply !== undefined;
   const isDeny = item.deny !== undefined ? item.deny === true : false;
+
   return (
     <Box borderRadius="md" width="full" bg="white" boxShadow="md">
       <Box>
@@ -116,6 +149,13 @@ const MessageItem = function ({ uid, screenName, displayName, photoURL, isOwner,
                   }}
                 >
                   메세지 상세 보기
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    deleteMessage();
+                  }}
+                >
+                  메세지 삭제
                 </MenuItem>
               </MenuList>
             </Menu>
