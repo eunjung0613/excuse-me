@@ -28,6 +28,7 @@ interface Props {
   userInfo: InAuthUser | null;
   screenName: string;
 }
+
 async function postMessage({
   uid,
   message,
@@ -271,6 +272,14 @@ const userHomePage: NextPage<Props> = function ({ userInfo, screenName }) {
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ query }) => {
   const { screenName } = query;
+  if (screenName === undefined) {
+    return {
+      props: {
+        userInfo: null,
+        screenName: '',
+      },
+    };
+  }
   const screenNameToStr = Array.isArray(screenName) ? screenName[0] : screenName;
   try {
     const protocol = process.env.PROTOCOL || 'http';
