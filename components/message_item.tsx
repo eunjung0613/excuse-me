@@ -29,18 +29,8 @@ interface Props {
   isOwner: boolean;
   item: InMessage;
   onSendComplete: () => void;
-  onDeleteComplete: () => void;
 }
-const MessageItem = function ({
-  uid,
-  screenName,
-  displayName,
-  photoURL,
-  isOwner,
-  item,
-  onSendComplete,
-  onDeleteComplete,
-}: Props) {
+const MessageItem = function ({ uid, screenName, displayName, photoURL, isOwner, item, onSendComplete }: Props) {
   const [reply, setReply] = useState('');
   const toast = useToast();
   async function postReply() {
